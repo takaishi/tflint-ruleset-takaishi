@@ -1,13 +1,13 @@
 .PHONY: build
 build:
-	go build -o dist/tflint-ruleset-takaishi ./cmd/tflint-ruleset-takaishi
+	go build -o dist/tflint-ruleset-takaishi .
 
 .PHONY: install
 install: build
 	mkdir -p ~/.tflint.d/plugins/
-	cp dist/$(PLUGIN_NAME) ~/.tflint.d/plugins/$(PLUGIN_NAME)
-	chmod +x ~/.tflint.d/plugins/$(PLUGIN_NAME)
+	cp dist/tflint-ruleset-takaishi ~/.tflint.d/plugins/tflint-ruleset-takaishi
+	chmod +x ~/.tflint.d/plugins/tflint-ruleset-takaishi
 
 .PHONY: test
 test:
-	go test -race ./...
+	go test ./...

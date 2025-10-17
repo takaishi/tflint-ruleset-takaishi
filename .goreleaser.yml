@@ -1,50 +1,44 @@
-project_name: tflint-ruleset-takaishi
+# This is an example goreleaser.yaml file with some sane defaults.
+# Make sure to check the documentation at http://goreleaser.com
+version: 2
 env:
-  - GO111MODULE=on
-before:
-  hooks:
-    - go mod tidy
+  - CGO_ENABLED=0
 builds:
-  - main: ./cmd/tflint-ruleset-takaishi
-    binary: tflint-ruleset-takaishi
-    ldflags:
-      - -s -w
-      - -X main.Version={{.Version}}
-      - -X main.Revision={{.ShortCommit}}
-    env:
-      - CGO_ENABLED=0
-    ignore:
-      - goos: windows
-        goarch: 386
-      - goos: darwin
-        goarch: 386
-      - goos: linux
-        goarch: 386
-      - goos: linux
-        goarch: arm
-        goarm: 7
+  - targets:
+      - darwin_amd64
+      - darwin_arm64
+      - linux_386
+      - linux_amd64
+      - linux_arm
+      - linux_arm64
+      - windows_386
+      - windows_amd64
+    hooks:
+      post:
+        - mkdir -p ./dist/raw
+        - cp "{{ .Path }}" "./dist/raw/{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
 archives:
-  - id: build
-    name_template: >-
-      {{ .ProjectName }}_
-      {{- title .Os }}_
-      {{- if eq .Arch "amd64" }}x86_64
-      {{- else if eq .Arch "386" }}i386
-      {{- else }}{{ .Arch }}{{ end }}
+  - id: zip
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    formats:
+      - zip
     files:
-      - README.md
-    format_overrides:
-      - goos: Windows
-        format: zip
-release:
-  prerelease: auto
+      - none*
 checksum:
   name_template: "checksums.txt"
-snapshot:
-  name_template: "{{ .Tag }}-next"
-changelog:
-  sort: asc
-  filters:
-    exclude:
-      - "^docs:"
-      - "^test:"
+  extra_files:
+    - glob: ./dist/raw/*
+signs:
+  - artifacts: checksum
+    args:
+      [
+        "--batch",
+        "-u",
+        "{{ .Env.GPG_FINGERPRINT }}",
+        "--output",
+        "${signature}",
+        "--detach-sign",
+        "${artifact}",
+      ]
+release:
+  github:
